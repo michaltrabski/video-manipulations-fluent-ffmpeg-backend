@@ -1,6 +1,11 @@
 const ffmpeg = require("fluent-ffmpeg");
 
-const trimVideo = (output, video, startSecond, drationSeconds, callback) => {
+const trimVideo = (_video, _output, startSecond, stopSecond, callback) => {
+  const video = "./videos/" + _video;
+  const output = "./videos/" + _output;
+
+  const durationSeconds = stopSecond - startSecond;
+
   ffmpeg.ffprobe(video, (err, metaData) => {
     if (err) return console.log("error!", err);
     const { duration } = metaData.format;
@@ -10,7 +15,7 @@ const trimVideo = (output, video, startSecond, drationSeconds, callback) => {
     ffmpeg()
       .input(video)
       .inputOptions([`-ss ${startSecond}`])
-      .outputOptions([`-t ${drationSeconds}`])
+      .outputOptions([`-t ${durationSeconds}`])
       // .noAudio()
       .output(output)
       .on("end", () => {

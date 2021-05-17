@@ -1,37 +1,49 @@
 const ffmpeg = require("fluent-ffmpeg");
 const { mergeVideos } = require("./mergeVideos");
 const { trimVideo } = require("./trimVideo");
+const fs = require("fs");
+const Jimp = require("jimp");
 
-// trimVideo(output, video, startSecond, drationSeconds, () => {
+// trimVideo(video,output,  startSecond, stopSecond, () => {
 //   mergeVideos(output, videos);
 // });
 
-trimVideo("./pulapka-przed-przejsciem.mp4", "./a.mp4", 110, 63, () => {});
-// trimVideo("./b.mp4", "./bbb.mp4", 0, 1, () => {});
+if (0) trimVideo("2.mp4", "short.mp4", 5, 6, () => {});
 
-// const filter = [
-//   "[0:v]scale=300:300[0scaled]",
-//   "[1:v]scale=300:300[1scaled]",
-//   "[0scaled]pad=600:300[0padded]",
-//   "[0padded][1scaled]overlay=shortest=1:x=300[output]",
-// ];
-const filter = [
-  "[0:v]scale=100:100[0scaled]",
-  "[1:v]scale=100:100[1scaled]",
-  "[0scaled]pad=300:300[0padded]",
-  "[0padded][1scaled]overlay=shortest=1:x=100[output]",
-];
-// ffmpeg()
-//   .input("a.mp4")
-//   .input("b.mp4")
-//   .complexFilter(filter)
-//   .outputOptions(["-map [output]"])
-//   .output("c.mp4")
-//   .on("error", function (er) {
-//     console.log("error occured: " + er.message);
-//   })
-//   .on("end", function () {
-//     console.log("success");
-//   })
-//   .on("progress", (progress) => console.log(Math.floor(progress.percent) + "%"))
-//   .run();
+async function resize() {
+  // Read the image.
+  const image = await Jimp.read(
+    "https://images.unsplash.com/photo-1568788282721-8579749fb7a2?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2682&q=80"
+  );
+
+  // await image.resize(400, 50);
+  await image.crop(0, 0, 1000, 500);
+  await image.opacity(0.9);
+
+  const font = await Jimp.loadFont(Jimp.FONT_SANS_128_WHITE);
+  image.print(font, 200, 110, "WITAM WSZYSTKICH", 500);
+
+  await image.writeAsync(`./videos/image.png`);
+}
+resize();
+
+ffmpeg("./videos/short.mp4")
+  .input("./videos/image.png")
+  .addOptions(["-strict -2"])
+  .complexFilter(
+    [
+      {
+        filter: "overlay",
+        options: {
+          enable: "between(t,0,2)",
+          x: "100",
+          y: "300",
+        },
+        inputs: "[0:v][1:v]",
+        outputs: "tmp",
+      },
+    ],
+    "tmp"
+  )
+  .output("./videos/withimage.mp4")
+  .run();
