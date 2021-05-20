@@ -13,6 +13,7 @@
     "fluent-ffmpeg": "^2.1.2",
     "jimp": "^0.16.1",
     "nodemon": "^2.0.7",
-    "text2png": "^2.3.0"
+    "text2png": "^2.3.0",
+    "videoshow": "^0.1.12"
   }
 }

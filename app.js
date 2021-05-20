@@ -1,49 +1,56 @@
+const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
 const { mergeVideos } = require("./mergeVideos");
-const { trimVideo } = require("./trimVideo");
-const fs = require("fs");
-const Jimp = require("jimp");
+const { createImage } = require("./createImage");
+const { videoWithText } = require("./videoWithText");
+const { getFrames } = require("./getFrames");
+const { speedUpVideo, trimVideo } = require("./utils/utils");
+var path = require("path");
+
+const video = path.resolve("videos", "short.mp4");
+const videoOutput = path.resolve("videos", "wynik.mp4");
+// console.log("video", video);
+speedUpVideo(video, videoOutput, () => {
+  console.log("GOTOWE speedUpVideo");
+});
+
+// getFrames("long.mp4");
+
+// trimVideo("short.mp4", "usun.mp4", 0, 1, () => {});
+
+const input1 = "./app/video1-input";
+const videos = [];
+let settings = {};
+
+(async function () {
+  // fs.readdir(input1, (err, files) => {
+  //   if (err) console.log("err1");
+  //   files.forEach((file) => {
+  //     if (file.includes(".mp4")) videos.push(file);
+  //     if (file === "settings.json") {
+  //       const data = fs.readFileSync(input1 + "/settings.json", {
+  //         encoding: "utf8",
+  //       });
+  //       settings = { ...JSON.parse(data) };
+  //     }
+  //   });
+  //   // console.log(videos, settings);
+  // });
+  // await createImage({
+  //   name: "text1.png",
+  //   text: "witam",
+  //   leftPosition: 50,
+  //   topPositon: 100,
+  // });
+  // await createImage({
+  //   name: "text2.png",
+  //   text: "Czesc",
+  //   leftPosition: 50,
+  //   topPositon: 100,
+  // });
+  // videoWithText({ name: "aaaaaaaaaaa.mp4" });
+})();
 
 // trimVideo(video,output,  startSecond, stopSecond, () => {
 //   mergeVideos(output, videos);
 // });
-
-if (0) trimVideo("2.mp4", "short.mp4", 5, 6, () => {});
-
-async function resize() {
-  // Read the image.
-  const image = await Jimp.read(
-    "https://images.unsplash.com/photo-1568788282721-8579749fb7a2?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2682&q=80"
-  );
-
-  // await image.resize(400, 50);
-  await image.crop(0, 0, 1000, 500);
-  await image.opacity(0.9);
-
-  const font = await Jimp.loadFont(Jimp.FONT_SANS_128_WHITE);
-  image.print(font, 200, 110, "WITAM WSZYSTKICH", 500);
-
-  await image.writeAsync(`./videos/image.png`);
-}
-resize();
-
-ffmpeg("./videos/short.mp4")
-  .input("./videos/image.png")
-  .addOptions(["-strict -2"])
-  .complexFilter(
-    [
-      {
-        filter: "overlay",
-        options: {
-          enable: "between(t,0,2)",
-          x: "100",
-          y: "300",
-        },
-        inputs: "[0:v][1:v]",
-        outputs: "tmp",
-      },
-    ],
-    "tmp"
-  )
-  .output("./videos/withimage.mp4")
-  .run();

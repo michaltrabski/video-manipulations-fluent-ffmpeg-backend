@@ -1,6 +1,10 @@
 const ffmpeg = require("fluent-ffmpeg");
 
-const mergeVideos = (output, videos) => {
+const mergeVideos = (_output, _videos) => {
+  const output = "./videos/" + _output;
+  const videos = _videos.map((video) => `./videos/${video}`);
+  console.log(output, videos);
+
   let mergedVideos = ffmpeg();
   videos.forEach((video) => {
     mergedVideos = mergedVideos.addInput(video);
