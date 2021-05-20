@@ -2,16 +2,32 @@ const ffmpeg = require("fluent-ffmpeg");
 var path = require("path");
 
 const speedUpVideo = async (video, output, callback) => {
-  const amountOfPngFiles = 4;
+  const amountOfPngFiles = 40;
 
-  // get many png from mp4
-  await videoToPng(video, amountOfPngFiles);
+  try {
+    await videoToPng(video, amountOfPngFiles);
 
-  const shortVideos = await pngToVideo(amountOfPngFiles);
-  console.log("shortVideos", shortVideos);
-  // convert each png to short mp4
+    const shortVideos = await pngToVideo(amountOfPngFiles);
+    console.log("shortVideos", shortVideos);
+    mergeVideos(shortVideos, output);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
-  // mergeVideos(output, smallVideos);
+const mergeVideos = (videos, output) => {
+  let mergedVideos = ffmpeg();
+  videos.forEach((video) => {
+    mergedVideos = mergedVideos.addInput(video);
+  });
+
+  mergedVideos
+    .mergeToFile(output)
+    .on("error", (err) => console.log("error1"))
+    .on("end", () => console.log("Ended!"))
+    .on("progress", (progress) =>
+      console.log(Math.floor(progress.percent) + "%")
+    );
 };
 
 const pngToVideo = async (amountOfPngFiles) => {
@@ -21,21 +37,32 @@ const pngToVideo = async (amountOfPngFiles) => {
 
     return new Promise((resolve, reject) => {
       ffmpeg(png)
-        .loop(0.5)
+        .loop(0.1)
         .output(video)
         .on("start", () => console.log("start"))
-        .on("error", (error) => reject("err"))
+        .on("error", (error) => {
+          console.log(error, png, video);
+          reject("err1");
+        })
         .on("end", () => resolve(video))
         .run();
     });
   };
 
-  const all = [];
-  for (i = 1; i <= amountOfPngFiles; i++) {
-    all.push(videoPromise(i));
+  const shortVideos = [];
+  const arr = Array.from({ length: amountOfPngFiles }, (_, i) => i + 1);
+  console.log(arr);
+  for (i of arr) {
+    const shortVideo = await videoPromise(i);
+    shortVideos.push(shortVideo);
   }
 
-  const shortVideos = await Promise.all(all);
+  // const all = [];
+  // for (i = 1; i <= amountOfPngFiles; i++) {
+  //   all.push(videoPromise(i));
+  // }
+
+  // const shortVideos = await Promise.all(all);
   return shortVideos;
 };
 
@@ -44,31 +71,12 @@ const videoToPng = (video, amountOfPngFiles) => {
     ffmpeg(video)
       .on("filenames", (filenames) => console.log(filenames.join(", ")))
       .on("end", () => resolve("videoToPng DONE"))
-      .on("error", () => reject("videoToPng ERROR"))
+      .on("error", () => reject("err2"))
       .screenshots({
         count: amountOfPngFiles,
         folder: path.dirname(video),
       });
   });
-};
-
-const mergeVideos = (_output, _videos) => {
-  const output = _output;
-  const videos = _videos.map((video) => `${video}`);
-  console.log(output, videos);
-
-  let mergedVideos = ffmpeg();
-  videos.forEach((video) => {
-    mergedVideos = mergedVideos.addInput(video);
-  });
-
-  mergedVideos
-    .mergeToFile(output)
-    .on("error", (err) => console.log("error!", err))
-    .on("end", () => console.log("Ended!"))
-    .on("progress", (progress) =>
-      console.log(Math.floor(progress.percent) + "%")
-    );
 };
 
 const trimVideo = (_video, _output, startSecond, stopSecond, callback) => {

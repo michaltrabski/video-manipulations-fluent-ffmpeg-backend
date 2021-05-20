@@ -7,9 +7,9 @@ const { getFrames } = require("./getFrames");
 const { speedUpVideo, trimVideo } = require("./utils/utils");
 var path = require("path");
 
-const video = path.resolve("videos", "short.mp4");
+const video = path.resolve("videos", "long.mp4");
 const videoOutput = path.resolve("videos", "wynik.mp4");
-// console.log("video", video);
+
 speedUpVideo(video, videoOutput, () => {
   console.log("GOTOWE speedUpVideo");
 });
