@@ -4,38 +4,23 @@ const { mergeVideos } = require("./mergeVideos");
 const { createImage } = require("./createImage");
 const { videoWithText } = require("./videoWithText");
 const { getFrames } = require("./getFrames");
-const { speedUpVideo, trimVideo } = require("./utils/utils");
+const {
+  speedUpVideo,
+  trimVideo,
+  readFileDescription,
+  getVideos,
+  trimVideos,
+} = require("./utils/utils");
 var path = require("path");
 
-const video = path.resolve("videos", "long.mp4");
-const videoOutput = path.resolve("videos", "wynik.mp4");
-
-speedUpVideo(video, videoOutput, () => {
-  console.log("GOTOWE speedUpVideo");
-});
-
-// getFrames("long.mp4");
-
-// trimVideo("short.mp4", "usun.mp4", 0, 1, () => {});
-
-const input1 = "./app/video1-input";
+const folder = path.resolve("videos");
 const videos = [];
 let settings = {};
 
 (async function () {
-  // fs.readdir(input1, (err, files) => {
-  //   if (err) console.log("err1");
-  //   files.forEach((file) => {
-  //     if (file.includes(".mp4")) videos.push(file);
-  //     if (file === "settings.json") {
-  //       const data = fs.readFileSync(input1 + "/settings.json", {
-  //         encoding: "utf8",
-  //       });
-  //       settings = { ...JSON.parse(data) };
-  //     }
-  //   });
-  //   // console.log(videos, settings);
-  // });
+  const videos = await getVideos(folder);
+  // console.log(videos);
+  trimVideos(folder, videos);
   // await createImage({
   //   name: "text1.png",
   //   text: "witam",
