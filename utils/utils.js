@@ -3,33 +3,51 @@ const { resolve } = require("path");
 const path = require("path");
 const fs = require("fs");
 
-const trimVideos = (folder, videos) => {
-  const video = videos[0];
-  const { videoName, order, start, end } = video;
+const trimVideos = async (folder, videos) => {
+  const trimedVideos = [];
+  for (const video of videos) {
+    const trimedVideo = await trimVideo(folder, video);
+    trimedVideos.push(trimedVideo);
+  }
+  return trimedVideos;
+};
 
-  const durationSeconds = end - start;
-  // console.log(videoName, order, start, end, durationSeconds);
+const trimVideo = async (folder, video) => {
+  return new Promise((resolve, reject) => {
+    const { videoName, order, start, end } = video;
 
-  const fileInput = path.resolve(folder, videoName);
-  const fileOutput = path.resolve(folder, `RESULT-${order}.mp4`);
-  console.log(fileInput, fileOutput);
+    const durationSeconds = end - start;
+    // console.log(videoName, order, start, end, durationSeconds);
 
-  ffmpeg.ffprobe(fileInput, (err, metaData) => {
-    if (err) return console.log("error_2", err);
-    // const { duration } = metaData.format;
+    const fileInput = path.resolve(folder, videoName);
+    const trimedVideoName = `TRIMED-${order}.mp4`;
+    const fileOutput = path.resolve(folder, trimedVideoName);
+    // console.log(fileInput, fileOutput);
 
-    ffmpeg()
-      .input(fileInput)
-      .inputOptions([`-ss ${start}`])
-      .outputOptions([`-t ${durationSeconds}`])
-      // .noAudio()
-      .output(fileOutput)
-      .on("end", () => console.log("done"))
-      .on("error", (err) => console.log("error!", err))
-      .on("progress", (progress) =>
-        console.log(Math.floor(progress.percent) + "%")
-      )
-      .run();
+    ffmpeg.ffprobe(fileInput, (err, metaData) => {
+      if (err) return console.log("error_2", err);
+      // const { duration } = metaData.format;
+
+      ffmpeg()
+        .input(fileInput)
+        .inputOptions([`-ss ${start}`])
+        .outputOptions([`-t ${durationSeconds}`])
+        // .noAudio()
+        .output(fileOutput)
+        .on("end", () => {
+          console.log("done");
+          resolve(trimedVideoName);
+        })
+        .on("error", (err) => {
+          console.log("error!", err);
+          reject();
+        })
+        .on("progress", (progress) =>
+          console.log(Math.floor(progress.percent) + "%")
+        )
+        .size("500x?")
+        .run();
+    });
   });
 };
 
@@ -39,16 +57,11 @@ const getVideos = (folder) => {
       if (err) reject("error_1");
       const videos = [];
       fileInputs.forEach((fileInput) => {
-        if (fileInput.includes(".mp4"))
+        if (fileInput[0] === "v" && fileInput.includes(".mp4")) {
           videos.push(readfileInputDescription(fileInput));
-        if (fileInput === "settings.json") {
-          const data = fs.readfileInputSync(folder + "/settings.json", {
-            encoding: "utf8",
-          });
-          settings = { ...JSON.parse(data) };
         }
       });
-      // console.log(videos, settings);
+      console.log(videos);
       resolve(videos);
     });
   });
@@ -142,42 +155,11 @@ const videoToPng = (video, amountOfPngfileInputs) => {
   });
 };
 
-const trimVideo = (_video, _output, startSecond, stopSecond, callback) => {
-  const video = "./videos/" + _video;
-  const output = "./videos/" + _output;
-
-  const durationSeconds = stopSecond - startSecond;
-
-  ffmpeg.ffprobe(video, (err, metaData) => {
-    if (err) return console.log("error!", err);
-    const { duration } = metaData.format;
-    console.log("duration", duration);
-
-    const start = Date.now();
-    ffmpeg()
-      .input(video)
-      .inputOptions([`-ss ${startSecond}`])
-      .outputOptions([`-t ${durationSeconds}`])
-      // .noAudio()
-      .output(output)
-      .on("end", () => {
-        console.log("trimmed in: ", (Date.now() - start) / 1000, "seconds");
-        callback();
-      })
-      .on("error", (err) => console.log("error!", err))
-      .on("progress", (progress) =>
-        console.log(Math.floor(progress.percent) + "%")
-      )
-      .withSize("600x?")
-      .run();
-  });
-};
-
 module.exports = {
-  trimVideo,
   speedUpVideo,
   mergeVideos,
   readfileInputDescription,
   getVideos,
   trimVideos,
+  trimVideo,
 };

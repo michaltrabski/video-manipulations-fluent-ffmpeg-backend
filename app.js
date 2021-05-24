@@ -19,8 +19,9 @@ let settings = {};
 
 (async function () {
   const videos = await getVideos(folder);
-  // console.log(videos);
-  trimVideos(folder, videos);
+  const trimedVideos = await trimVideos(folder, videos);
+  console.log(trimedVideos);
+
   // await createImage({
   //   name: "text1.png",
   //   text: "witam",
