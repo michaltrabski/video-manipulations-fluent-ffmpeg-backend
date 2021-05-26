@@ -3,6 +3,35 @@ const { resolve } = require("path");
 const path = require("path");
 const fs = require("fs");
 
+const mergeVideos = (folder, videoNames) => {
+  return new Promise((resolve, reject) => {
+    const videos = videoNames.map((videoName) =>
+      path.resolve(folder, videoName)
+    );
+
+    let mergedVideos = ffmpeg();
+    videos.forEach((video) => {
+      mergedVideos = mergedVideos.addInput(video);
+    });
+
+    const mergedVideoName = "GOTOWE.mp4";
+    const fileOutput = path.resolve(folder, mergedVideoName);
+    mergedVideos
+      .mergeToFile(fileOutput)
+      .on("error", (err) => {
+        console.log("error!", err);
+        reject();
+      })
+      .on("end", () => {
+        console.log("Ended!");
+        resolve(mergedVideoName);
+      })
+      .on("progress", (progress) =>
+        console.log(Math.floor(progress.percent) + "%")
+      );
+  });
+};
+
 const trimVideos = async (folder, videos) => {
   const trimedVideos = [];
   for (const video of videos) {
@@ -45,7 +74,7 @@ const trimVideo = async (folder, video) => {
         .on("progress", (progress) =>
           console.log(Math.floor(progress.percent) + "%")
         )
-        .size("500x?")
+        // .size("500x?")
         .run();
     });
   });
@@ -53,16 +82,24 @@ const trimVideo = async (folder, video) => {
 
 const getVideos = (folder) => {
   return new Promise((resolve, reject) => {
-    fs.readdir(folder, (err, fileInputs) => {
+    fs.readdir(folder, (err, files) => {
       if (err) reject("error_1");
       const videos = [];
-      fileInputs.forEach((fileInput) => {
-        if (fileInput[0] === "v" && fileInput.includes(".mp4")) {
-          videos.push(readfileInputDescription(fileInput));
+      files.forEach((file) => {
+        // if (fileInput[0] === "v" && fileInput.includes(".mp4")) {
+        //   videos.push(readfileInputDescription(fileInput));
+        // }
+        if (file.includes(".mp4")) {
+          videos.push(readfileInputDescription(file));
         }
       });
-      console.log(videos);
-      resolve(videos);
+      console.log(videos, folder);
+
+      const dataOutput = path.resolve(folder, "data.json");
+      fs.writeFile(dataOutput, JSON.stringify(videos), function (err) {
+        if (err) return console.log("err_12314234234");
+        resolve(videos);
+      });
     });
   });
 };
@@ -86,21 +123,6 @@ const speedUpVideo = async (video, output, callback) => {
   } catch (err) {
     console.log(err);
   }
-};
-
-const mergeVideos = (videos, output) => {
-  let mergedVideos = ffmpeg();
-  videos.forEach((video) => {
-    mergedVideos = mergedVideos.addInput(video);
-  });
-
-  mergedVideos
-    .mergeTofileInput(output)
-    .on("error", (err) => console.log("error1"))
-    .on("end", () => console.log("Ended!"))
-    .on("progress", (progress) =>
-      console.log(Math.floor(progress.percent) + "%")
-    );
 };
 
 const pngToVideo = async (amountOfPngfileInputs) => {
@@ -157,9 +179,9 @@ const videoToPng = (video, amountOfPngfileInputs) => {
 
 module.exports = {
   speedUpVideo,
-  mergeVideos,
   readfileInputDescription,
   getVideos,
   trimVideos,
   trimVideo,
+  mergeVideos,
 };

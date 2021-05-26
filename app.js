@@ -1,26 +1,23 @@
 const fs = require("fs");
 const ffmpeg = require("fluent-ffmpeg");
-const { mergeVideos } = require("./mergeVideos");
 const { createImage } = require("./createImage");
 const { videoWithText } = require("./videoWithText");
 const { getFrames } = require("./getFrames");
-const {
-  speedUpVideo,
-  trimVideo,
-  readFileDescription,
-  getVideos,
-  trimVideos,
-} = require("./utils/utils");
+const { getVideos, trimVideos, mergeVideos } = require("./utils/utils");
 var path = require("path");
 
 const folder = path.resolve("videos");
-const videos = [];
-let settings = {};
 
 (async function () {
-  const videos = await getVideos(folder);
-  const trimedVideos = await trimVideos(folder, videos);
-  console.log(trimedVideos);
+  try {
+    const videos = await getVideos(folder);
+    // const trimedVideos = await trimVideos(folder, videos);
+
+    // const gotowe = await mergeVideos(folder, trimedVideos);
+    // console.log("gotowe", gotowe);
+  } catch (err) {
+    console.log("error_123", err);
+  }
 
   // await createImage({
   //   name: "text1.png",
@@ -36,7 +33,3 @@ let settings = {};
   // });
   // videoWithText({ name: "aaaaaaaaaaa.mp4" });
 })();
-
-// trimVideo(video,output,  startSecond, stopSecond, () => {
-//   mergeVideos(output, videos);
-// });
