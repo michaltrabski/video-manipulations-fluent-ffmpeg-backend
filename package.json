@@ -5,15 +5,28 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
+    "start": "concurrently \"npm run nodemon\" \"npm run open\"",
+    "nodemon": "nodemon app.js",
+    "open": "start https://edit-video.netlify.app/"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "concurrently": "^6.2.1",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
     "fluent-ffmpeg": "^2.1.2",
     "jimp": "^0.16.1",
     "nodemon": "^2.0.7",
+    "open": "^8.2.0",
+    "slugify": "^1.5.3",
     "text2png": "^2.3.0",
     "videoshow": "^0.1.12"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "html",
+      "videos"
+    ]
   }
 }

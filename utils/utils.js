@@ -2,20 +2,39 @@ const ffmpeg = require("fluent-ffmpeg");
 const { resolve } = require("path");
 const path = require("path");
 const fs = require("fs");
+const slugify = require("slugify");
 
-const mergeVideos = (folder, videoNames) => {
+const makeSlug = (text) => {
+  return slugify(text, {
+    replacement: "-", // replace spaces with replacement character, defaults to `-`
+    remove: undefined, // remove characters that match regex, defaults to `undefined`
+    lower: false, // convert to lower case, defaults to `false`
+    strict: false, // strip special characters except replacement, defaults to `false`
+    locale: "vi", // language code of the locale to use
+  });
+};
+
+const mergeVideos = (
+  folder,
+  resultVideoFolder,
+  videosToMerge,
+  mergedVideoName
+) => {
   return new Promise((resolve, reject) => {
-    const videos = videoNames.map((videoName) =>
+    const videos = videosToMerge.map((videoName) =>
       path.resolve(folder, videoName)
     );
+    console.log("3", videos);
 
     let mergedVideos = ffmpeg();
     videos.forEach((video) => {
       mergedVideos = mergedVideos.addInput(video);
     });
 
-    const mergedVideoName = "GOTOWE.mp4";
-    const fileOutput = path.resolve(folder, mergedVideoName);
+    const fileOutput = path.resolve(resultVideoFolder, mergedVideoName);
+
+    console.log("4", fileOutput);
+
     mergedVideos
       .mergeToFile(fileOutput)
       .on("error", (err) => {
@@ -33,6 +52,7 @@ const mergeVideos = (folder, videoNames) => {
 };
 
 const trimVideos = async (folder, videos) => {
+  // console.log("folder", folder);
   const trimedVideos = [];
   for (const video of videos) {
     const trimedVideo = await trimVideo(folder, video);
@@ -43,15 +63,11 @@ const trimVideos = async (folder, videos) => {
 
 const trimVideo = async (folder, video) => {
   return new Promise((resolve, reject) => {
-    const { videoName, order, start, end } = video;
-
-    const durationSeconds = end - start;
-    // console.log(videoName, order, start, end, durationSeconds);
-
-    const fileInput = path.resolve(folder, videoName);
-    const trimedVideoName = `TRIMED-${order}.mp4`;
-    const fileOutput = path.resolve(folder, trimedVideoName);
-    // console.log(fileInput, fileOutput);
+    const { id, name, trimStart, trimStop } = video;
+    const durationSeconds = trimStop - trimStart;
+    const fileInput = path.resolve(folder, name);
+    const trimedVideoName = `TRIMED-${id}-${name}`;
+    const fileOutput = path.resolve(folder, "temp", trimedVideoName);
 
     ffmpeg.ffprobe(fileInput, (err, metaData) => {
       if (err) return console.log("error_2", err);
@@ -59,9 +75,9 @@ const trimVideo = async (folder, video) => {
 
       ffmpeg()
         .input(fileInput)
-        .inputOptions([`-ss ${start}`])
+        .inputOptions([`-ss ${trimStart}`])
         .outputOptions([`-t ${durationSeconds}`])
-        // .noAudio()
+        .noAudio()
         .output(fileOutput)
         .on("end", () => {
           console.log("done");
@@ -74,28 +90,29 @@ const trimVideo = async (folder, video) => {
         .on("progress", (progress) =>
           console.log(Math.floor(progress.percent) + "%")
         )
-        // .size("500x?")
+        // .size("1920x?")
+        .size("100x?")
         .run();
     });
   });
 };
 
-const getVideos = (folder) => {
+const getVideos = (folder, htmlFolder) => {
   return new Promise((resolve, reject) => {
     fs.readdir(folder, (err, files) => {
       if (err) reject("error_1");
       const videos = [];
       files.forEach((file) => {
-        // if (fileInput[0] === "v" && fileInput.includes(".mp4")) {
-        //   videos.push(readfileInputDescription(fileInput));
-        // }
-        if (file.includes(".mp4")) {
+        if (file[0] === "v" && file.includes(".mp4")) {
           videos.push(readfileInputDescription(file));
         }
+        // if (file.includes(".mp4")) {
+        //   videos.push(readfileInputDescription(file));
+        // }
       });
-      console.log(videos, folder);
+      console.log(videos, folder, htmlFolder);
 
-      const dataOutput = path.resolve(folder, "data.json");
+      const dataOutput = path.resolve(htmlFolder, "data.json");
       fs.writeFile(dataOutput, JSON.stringify(videos), function (err) {
         if (err) return console.log("err_12314234234");
         resolve(videos);
@@ -184,4 +201,5 @@ module.exports = {
   trimVideos,
   trimVideo,
   mergeVideos,
+  makeSlug,
 };
