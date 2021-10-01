@@ -1,8 +1,12 @@
 const ffmpeg = require("fluent-ffmpeg");
 const { resolve } = require("path");
 const path = require("path");
-const fs = require("fs");
+const fs = require("fs-extra");
 const slugify = require("slugify");
+
+const random = (min = 1, max = 9999) => {
+  return "video_" + Math.floor(Math.random() * (max - min + 1)) + min;
+};
 
 const makeSlug = (text) => {
   return slugify(text, {
@@ -24,7 +28,6 @@ const mergeVideos = (
     const videos = videosToMerge.map((videoName) =>
       path.resolve(folder, videoName)
     );
-    console.log("3", videos);
 
     let mergedVideos = ffmpeg();
     videos.forEach((video) => {
@@ -32,8 +35,6 @@ const mergeVideos = (
     });
 
     const fileOutput = path.resolve(resultVideoFolder, mergedVideoName);
-
-    console.log("4", fileOutput);
 
     mergedVideos
       .mergeToFile(fileOutput)
@@ -52,7 +53,6 @@ const mergeVideos = (
 };
 
 const trimVideos = async (folder, videos) => {
-  // console.log("folder", folder);
   const trimedVideos = [];
   for (const video of videos) {
     const trimedVideo = await trimVideo(folder, video);
@@ -64,6 +64,7 @@ const trimVideos = async (folder, videos) => {
 const trimVideo = async (folder, video) => {
   return new Promise((resolve, reject) => {
     const { id, name, trimStart, trimStop } = video;
+    console.log(1, id, name, trimStart, trimStop);
     const durationSeconds = trimStop - trimStart;
     const fileInput = path.resolve(folder, name);
     const trimedVideoName = `TRIMED-${id}-${name}`;
@@ -91,7 +92,7 @@ const trimVideo = async (folder, video) => {
           console.log(Math.floor(progress.percent) + "%")
         )
         // .size("1920x?")
-        .size("100x?")
+        .size("300x?")
         .run();
     });
   });
@@ -202,4 +203,6 @@ module.exports = {
   trimVideo,
   mergeVideos,
   makeSlug,
+  random,
+  videoToPng,
 };

@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("fs-extra");
 const path = require("path");
 const open = require("open");
 const express = require("express");
@@ -9,41 +9,69 @@ const ffmpeg = require("fluent-ffmpeg");
 const { createImage } = require("./createImage");
 const { videoWithText } = require("./videoWithText");
 const { getFrames } = require("./getFrames");
-const { getVideos, trimVideos, mergeVideos } = require("./utils/utils");
+const {
+  videoToPng,
+  trimVideos,
+  mergeVideos,
+  random,
+} = require("./utils/utils");
 
-(async () => {
-  // await open("https://edit-video.netlify.app/");
-})();
+// fs.ensureDirSync(path.resolve(__dirname, "videos", "xxxx"));
 
-const videosFolder = path.resolve(__dirname, "videos");
-const tempVideosFolder = path.resolve(__dirname, "videos", "temp");
-const resultVideoFolder = path.resolve(__dirname, "videos", "result");
+const G = path.resolve(
+  "G:",
+  "YOUTUBE",
+  "Buschcraft",
+  "1) 27.09.2021 buschcraft nad odrą",
+  "garmin"
+);
+const videosFolder = false ? G : path.resolve(__dirname, "videos");
 
-app.use(express.static("videos"));
+console.log(videosFolder);
+
+app.use(express.static(videosFolder));
 app.use(bodyParser.json());
 app.use(cors());
 
 app.get("/", function (req, res) {
   const videos = [];
   fs.readdir(videosFolder, (err, files) => {
-    files.forEach((file) => file.includes(".mp4") && videos.push(file));
+    if (err) return console.log("err", err);
+
+    for (const file of files.slice(0, 11)) {
+      if (file.includes(".mp4") || file.includes(".MP4")) {
+        console.log("file => ", file);
+        videos.push(file);
+      }
+    }
+
+    console.log("videos => ", { videos });
     res.send({ videos });
   });
 });
 
 app.post("/", function (req, res) {
-  // console.log("req =>", req.body);
   res.send(req.body);
   produceVideo(req.body);
 });
 
+const videosToMp3 = async (videos) => {};
+
 const produceVideo = async (videos) => {
-  console.log("1 ", videos);
+  const tempVideosFolder = path.resolve(__dirname, "videos", "temp");
+  const resultVideoFolder = path.resolve(
+    __dirname,
+    "videos",
+    "result",
+    random()
+  );
+
+  fs.ensureDirSync(tempVideosFolder);
+  fs.ensureDirSync(resultVideoFolder);
+
   try {
     const trimedVideos = await trimVideos(videosFolder, videos);
-    console.log("2 ", trimedVideos);
-
-    const mergedVideoName = "xxxxxxxxxxxxxxxxxxxx.mp4";
+    const mergedVideoName = `video.mp4`;
     await mergeVideos(
       tempVideosFolder,
       resultVideoFolder,
@@ -51,6 +79,7 @@ const produceVideo = async (videos) => {
       mergedVideoName
     );
     console.log("Merged All Videos =>", mergedVideoName);
+    await videoToPng(path.resolve(resultVideoFolder, mergedVideoName), 3);
   } catch (err) {
     console.log("error_123", err);
   }
