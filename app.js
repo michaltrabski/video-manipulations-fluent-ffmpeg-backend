@@ -9,25 +9,14 @@ const ffmpeg = require("fluent-ffmpeg");
 const { createImage } = require("./createImage");
 const { videoWithText } = require("./videoWithText");
 const { getFrames } = require("./getFrames");
-const {
-  videoToPng,
-  trimVideos,
-  mergeVideos,
-  random,
-} = require("./utils/utils");
+const { videoToPng, trimVideos, mergeVideos, random } = require("./utils/utils");
 
-// fs.ensureDirSync(path.resolve(__dirname, "videos", "xxxx"));
+// create folder for videos - put there mp4 files
+const VIDEOS = "videos";
+fs.ensureDirSync(path.resolve(__dirname, VIDEOS));
 
-const G = path.resolve(
-  "G:",
-  "YOUTUBE",
-  "Buschcraft",
-  "1) 27.09.2021 buschcraft nad odrą",
-  "garmin"
-);
-const videosFolder = false ? G : path.resolve(__dirname, "videos");
-
-console.log(videosFolder);
+const G = path.resolve("G:", "YOUTUBE", "Buschcraft", "1) 27.09.2021 buschcraft nad odrą", "garmin");
+const videosFolder = false ? G : path.resolve(__dirname, VIDEOS);
 
 app.use(express.static(videosFolder));
 app.use(bodyParser.json());
@@ -58,13 +47,8 @@ app.post("/", function (req, res) {
 const videosToMp3 = async (videos) => {};
 
 const produceVideo = async (videos) => {
-  const tempVideosFolder = path.resolve(__dirname, "videos", "temp");
-  const resultVideoFolder = path.resolve(
-    __dirname,
-    "videos",
-    "result",
-    random()
-  );
+  const tempVideosFolder = path.resolve(__dirname, VIDEOS, "temp");
+  const resultVideoFolder = path.resolve(__dirname, VIDEOS, "result", random());
 
   fs.ensureDirSync(tempVideosFolder);
   fs.ensureDirSync(resultVideoFolder);
@@ -72,12 +56,7 @@ const produceVideo = async (videos) => {
   try {
     const trimedVideos = await trimVideos(videosFolder, videos);
     const mergedVideoName = `video.mp4`;
-    await mergeVideos(
-      tempVideosFolder,
-      resultVideoFolder,
-      trimedVideos,
-      mergedVideoName
-    );
+    await mergeVideos(tempVideosFolder, resultVideoFolder, trimedVideos, mergedVideoName);
     console.log("Merged All Videos =>", mergedVideoName);
     await videoToPng(path.resolve(resultVideoFolder, mergedVideoName), 3);
   } catch (err) {
@@ -100,4 +79,6 @@ const produceVideo = async (videos) => {
 };
 
 // PORT
-app.listen(process.env.PORT || 3000, () => {});
+app.listen(process.env.PORT || 3000, () => {
+  console.log(`Example app listening at http://localhost:${process.env.PORT || 3000}`);
+});
