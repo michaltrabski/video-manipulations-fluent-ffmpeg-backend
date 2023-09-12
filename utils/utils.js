@@ -18,16 +18,9 @@ const makeSlug = (text) => {
   });
 };
 
-const mergeVideos = (
-  folder,
-  resultVideoFolder,
-  videosToMerge,
-  mergedVideoName
-) => {
+const mergeVideos = (folder, resultVideoFolder, videosToMerge, mergedVideoName) => {
   return new Promise((resolve, reject) => {
-    const videos = videosToMerge.map((videoName) =>
-      path.resolve(folder, videoName)
-    );
+    const videos = videosToMerge.map((videoName) => path.resolve(folder, videoName));
 
     let mergedVideos = ffmpeg();
     videos.forEach((video) => {
@@ -46,9 +39,7 @@ const mergeVideos = (
         console.log("Ended!");
         resolve(mergedVideoName);
       })
-      .on("progress", (progress) =>
-        console.log(Math.floor(progress.percent) + "%")
-      );
+      .on("progress", (progress) => console.log(Math.floor(progress.percent) + "%"));
   });
 };
 
@@ -88,9 +79,7 @@ const trimVideo = async (folder, video) => {
           console.log("error!", err);
           reject();
         })
-        .on("progress", (progress) =>
-          console.log(Math.floor(progress.percent) + "%")
-        )
+        .on("progress", (progress) => console.log(Math.floor(progress.percent) + "%"))
         // .size("1920x?")
         .size("300x?")
         .run();
@@ -182,9 +171,7 @@ const pngToVideo = async (amountOfPngfileInputs) => {
 const videoToPng = (video, amountOfPngfileInputs) => {
   return new Promise((resolve, reject) => {
     ffmpeg(video)
-      .on("fileInputnames", (fileInputnames) =>
-        console.log(fileInputnames.join(", "))
-      )
+      .on("fileInputnames", (fileInputnames) => console.log(fileInputnames.join(", ")))
       .on("end", () => resolve("videoToPng DONE"))
       .on("error", () => reject("err2"))
       .screenshots({
@@ -192,6 +179,32 @@ const videoToPng = (video, amountOfPngfileInputs) => {
         folder: path.dirname(video),
         size: "650x?",
       });
+  });
+};
+
+// normalize projects subfolders names
+const normalizeProjectsSubfoldersNames = (projectsDir) => {
+  fs.readdirSync(projectsDir).forEach((item) => {
+    const isItemDirectory = fs.lstatSync(path.resolve(projectsDir, item)).isDirectory();
+    if (isItemDirectory) {
+      const normalizedItem = item.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
+      fs.renameSync(path.resolve(projectsDir, item), path.resolve(projectsDir, normalizedItem));
+    }
+  });
+};
+
+const getVideoInfo = (videoPath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(videoPath, (err, metadata) => {
+      if (err) {
+        console.error("Error reading video metadata:", err);
+        reject(err);
+      } else {
+        const { duration, size } = metadata.format;
+        console.log("metadata", metadata);
+        resolve({ duration, size });
+      }
+    });
   });
 };
 
@@ -205,4 +218,7 @@ module.exports = {
   makeSlug,
   random,
   videoToPng,
+  pngToVideo,
+  normalizeProjectsSubfoldersNames,
+  getVideoInfo,
 };

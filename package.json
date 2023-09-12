@@ -5,10 +5,11 @@
   "main": "app.js",
   "devDependencies": {},
   "scripts": {
-    "start": "concurrently \"npm run nodemon\" \"npm run open-dev\"",
+    "start": "concurrently \"npm run nodemon\" \"npm run open\"",
+    "dev": "concurrently \"npm run nodemon\" \"npm run open-dev\"",
     "nodemon": "nodemon app.js",
     "open": "start https://edit-video.netlify.app/",
-    "open-dev": "start http://localhost:3000/"
+    "open-dev": "start http://localhost:5500/"
   },
   "keywords": [
     "nodejs"

@@ -1,5 +1,8 @@
 # folders
 videos
+videos/*
+projects
+projects/*
 
 
 # Logs
