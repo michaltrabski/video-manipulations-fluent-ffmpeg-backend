@@ -200,9 +200,11 @@ const getVideoInfo = (videoPath) => {
         console.error("Error reading video metadata:", err);
         reject(err);
       } else {
-        const { duration, size } = metadata.format;
-        console.log("metadata", metadata);
-        resolve({ duration, size });
+        const duration = metadata.format?.duration || 0;
+        const size = metadata.format?.size || 0;
+        const creationTime = metadata.format?.tags?.creation_time || 0;
+        // console.log("metadata", metadata);
+        resolve({ duration, size, creationTime });
       }
     });
   });

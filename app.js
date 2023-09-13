@@ -29,7 +29,7 @@ const G = path.resolve("G:", "YOUTUBE", "Buschcraft", "1) 27.09.2021 buschcraft 
 const videosFolder = false ? G : path.resolve(__dirname, VIDEO_PROJECTS);
 
 // serve static files from videos folder and allow cors
-app.use(express.static(videosFolder));
+app.use("/projects", express.static(projectsDir));
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -74,24 +74,25 @@ app.get("/", async (req, res) => {
     const projectDirs = fs.readdirSync(projectsDir);
 
     await Promise.all(
-      projectDirs.map(async (item) => {
-        const isItemDirectory = fs.lstatSync(path.resolve(projectsDir, item)).isDirectory();
+      projectDirs.map(async (itemInDir) => {
+        const isItemDirectory = fs.lstatSync(path.resolve(projectsDir, itemInDir)).isDirectory();
 
         if (isItemDirectory) {
-          const project = { name: item };
-          const videosFolder = path.resolve(projectsDir, project.name);
+          const project = { projectName: itemInDir };
+          const videosFolder = path.resolve(projectsDir, project.projectName);
 
           const videoFiles = fs.readdirSync(videosFolder);
 
-          project.videos = videoFiles
+          project.projectVideos = videoFiles
             .filter((item) => item.match(/\.(mp4|MP4)$/))
             .map(async (item) => {
               const videoPath = path.resolve(videosFolder, item);
               const videoName = item;
+              const url = `${project.projectName}/${videoName}`;
 
-              const { duration, size } = await getVideoInfo(videoPath);
+              const { duration, size, creationTime } = await getVideoInfo(videoPath);
 
-              return { videoName, videoPath, duration, size };
+              return { videoName, videoPath, url, duration, size, creationTime };
             });
 
           projects.push(project);
@@ -101,7 +102,7 @@ app.get("/", async (req, res) => {
 
     const updatedProjects = await Promise.all(
       projects.map(async (project) => {
-        project.videos = await Promise.all(project.videos);
+        project.projectVideos = await Promise.all(project.projectVideos);
         return project;
       })
     );
