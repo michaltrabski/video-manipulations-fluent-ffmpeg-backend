@@ -1,11 +1,17 @@
 # video-manipulations-fluent-ffmpeg-backend
 
-Node app to trim and merge mp4 videos.
+This Node.js application is designed to trim and merge MP4 videos.
 
-how to use it:
+## How to Use It
 
-1. Put all mp4 files that you want to work with to "videos" folder
+Follow these steps to use the application:
 
-2. Execute npm run start script. FE page will be opened automatically.
+1. Put all the mp4 files that you want to work with in the "projects/your-project-name" folder.
+
+2. Execute the following command to start the application:
+
+   ```bash
+   npm run start
+   ```
 
 3. Frontend part for this BE is deployed here: https://edit-video.netlify.app/
